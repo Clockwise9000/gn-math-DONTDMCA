@@ -148,12 +148,13 @@ function displayFeaturedZones(featuredZones) {
         const zoneItem = document.createElement("div");
         zoneItem.className = "zone-item";
         zoneItem.onclick = () => openZone(file);
-        const img = document.createElement("img");
-        img.dataset.src = file.cover.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
-        img.alt = file.name;
-        img.loading = "lazy";
-        img.className = "lazy-zone-img";
-        zoneItem.appendChild(img);
+        // Removed image creation and appending
+        // const img = document.createElement("img");
+        // img.dataset.src = file.cover.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+        // img.alt = file.name;
+        // img.loading = "lazy";
+        // img.className = "lazy-zone-img";
+        // zoneItem.appendChild(img);
         const button = document.createElement("button");
         button.textContent = file.name;
         button.onclick = (event) => {
@@ -169,24 +170,25 @@ function displayFeaturedZones(featuredZones) {
         document.getElementById("allZonesSummary").textContent = `Featured Zones (${featuredZones.length})`;
     }
 
-    const lazyImages = document.querySelectorAll('#featuredZones img.lazy-zone-img');
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting && !zoneViewer.hidden) {
-                const img = entry.target;
-                img.src = img.dataset.src;
-                img.classList.remove("lazy-zone-img");
-                observer.unobserve(img);
-            }
-        });
-    }, {
-        rootMargin: "100px", 
-        threshold: 0.1
-    });
+    // Removed lazy loading logic since images are removed
+    // const lazyImages = document.querySelectorAll('#featuredZones img.lazy-zone-img');
+    // const imageObserver = new IntersectionObserver((entries, observer) => {
+    //     entries.forEach(entry => {
+    //         if (entry.isIntersecting && !zoneViewer.hidden) {
+    //             const img = entry.target;
+    //             img.src = img.dataset.src;
+    //             img.classList.remove("lazy-zone-img");
+    //             observer.unobserve(img);
+    //         }
+    //     });
+    // }, {
+    //     rootMargin: "100px", 
+    //     threshold: 0.1
+    // });
 
-    lazyImages.forEach(img => {
-        imageObserver.observe(img);
-    });
+    // lazyImages.forEach(img => {
+    //     imageObserver.observe(img);
+    // });
 }
 
 function displayZones(zones) {
@@ -195,12 +197,13 @@ function displayZones(zones) {
         const zoneItem = document.createElement("div");
         zoneItem.className = "zone-item";
         zoneItem.onclick = () => openZone(file);
-        const img = document.createElement("img");
-        img.dataset.src = file.cover.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
-        img.alt = file.name;
-        img.loading = "lazy";
-        img.className = "lazy-zone-img";
-        zoneItem.appendChild(img);
+        // Removed image creation and appending
+        // const img = document.createElement("img");
+        // img.dataset.src = file.cover.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+        // img.alt = file.name;
+        // img.loading = "lazy";
+        // img.className = "lazy-zone-img";
+        // zoneItem.appendChild(img);
         const button = document.createElement("button");
         button.textContent = file.name;
         button.onclick = (event) => {
@@ -216,24 +219,25 @@ function displayZones(zones) {
         document.getElementById("allSummary").textContent = `All Zones (${zones.length})`;
     }
 
-    const lazyImages = document.querySelectorAll('img.lazy-zone-img');
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting && !zoneViewer.hidden) {
-                const img = entry.target;
-                img.src = img.dataset.src;
-                img.classList.remove("lazy-zone-img");
-                observer.unobserve(img);
-            }
-        });
-    }, {
-        rootMargin: "100px", 
-        threshold: 0.1
-    });
+    // Removed lazy loading logic since images are removed
+    // const lazyImages = document.querySelectorAll('img.lazy-zone-img');
+    // const imageObserver = new IntersectionObserver((entries, observer) => {
+    //     entries.forEach(entry => {
+    //         if (entry.isIntersecting && !zoneViewer.hidden) {
+    //             const img = entry.target;
+    //             img.src = img.dataset.src;
+    //             img.classList.remove("lazy-zone-img");
+    //             observer.unobserve(img);
+    //         }
+    //     });
+    // }, {
+    //     rootMargin: "100px", 
+    //     threshold: 0.1
+    // });
 
-    lazyImages.forEach(img => {
-        imageObserver.observe(img);
-    });
+    // lazyImages.forEach(img => {
+    //     imageObserver.observe(img);
+    // });
 }
 
 function filterZones() {
@@ -444,84 +448,84 @@ async function saveData() {
     reader.onload = async function (e) {
         const data = JSON.parse(e.target.result);
         if (data.cookies) {
-            data.cookies.split(';').forEach(cookie => {
-              document.cookie = cookie.trim();
+          data.cookies.split(';').forEach(cookie => {
+            document.cookie = cookie.trim();
+          });
+        }
+        
+        if (data.localStorage) {
+          for (const key in data.localStorage) {
+            localStorage.setItem(key, data.localStorage[key]);
+          }
+        }
+        
+        if (data.sessionStorage) {
+          for (const key in data.sessionStorage) {
+            sessionStorage.setItem(key, data.sessionStorage[key]);
+          }
+        }
+        
+        if (data.indexedDB) {
+          for (const dbName in data.indexedDB) {
+            const stores = data.indexedDB[dbName];
+            await new Promise((resolve, reject) => {
+              const request = indexedDB.open(dbName, 1);
+              request.onupgradeneeded = e => {
+                const db = e.target.result;
+                for (const storeName in stores) {
+                  if (!db.objectStoreNames.contains(storeName)) {
+                    db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
+                  }
+                }
+              };
+              request.onsuccess = e => {
+                const db = e.target.result;
+                const transaction = db.transaction(Object.keys(stores), 'readwrite');
+                transaction.onerror = () => reject(transaction.error);
+                let pendingStores = Object.keys(stores).length;
+        
+                for (const storeName in stores) {
+                  const objectStore = transaction.objectStore(storeName);
+                  objectStore.clear().onsuccess = () => {
+                    for (const item of stores[storeName]) {
+                      objectStore.put(item);
+                    }
+                    pendingStores--;
+                    if (pendingStores === 0) resolve();
+                  };
+                }
+              };
+              request.onerror = () => reject(request.error);
             });
           }
+        }
         
-          if (data.localStorage) {
-            for (const key in data.localStorage) {
-              localStorage.setItem(key, data.localStorage[key]);
-            }
-          }
+        if (data.caches) {
+          for (const cacheName in data.caches) {
+            const cache = await caches.open(cacheName);
+            await cache.keys().then(keys => Promise.all(keys.map(k => cache.delete(k)))); // clear existing
         
-          if (data.sessionStorage) {
-            for (const key in data.sessionStorage) {
-              sessionStorage.setItem(key, data.sessionStorage[key]);
-            }
-          }
-        
-          if (data.indexedDB) {
-            for (const dbName in data.indexedDB) {
-              const stores = data.indexedDB[dbName];
-              await new Promise((resolve, reject) => {
-                const request = indexedDB.open(dbName, 1);
-                request.onupgradeneeded = e => {
-                  const db = e.target.result;
-                  for (const storeName in stores) {
-                    if (!db.objectStoreNames.contains(storeName)) {
-                      db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
-                    }
-                  }
-                };
-                request.onsuccess = e => {
-                  const db = e.target.result;
-                  const transaction = db.transaction(Object.keys(stores), 'readwrite');
-                  transaction.onerror = () => reject(transaction.error);
-                  let pendingStores = Object.keys(stores).length;
-        
-                  for (const storeName in stores) {
-                    const objectStore = transaction.objectStore(storeName);
-                    objectStore.clear().onsuccess = () => {
-                      for (const item of stores[storeName]) {
-                        objectStore.put(item);
-                      }
-                      pendingStores--;
-                      if (pendingStores === 0) resolve();
-                    };
-                  }
-                };
-                request.onerror = () => reject(request.error);
-              });
-            }
-          }
-        
-          if (data.caches) {
-            for (const cacheName in data.caches) {
-              const cache = await caches.open(cacheName);
-              await cache.keys().then(keys => Promise.all(keys.map(k => cache.delete(k)))); // clear existing
-        
-              for (const entry of data.caches[cacheName]) {
-                let responseBody;
-                if (entry.contentType.includes('application/json')) {
-                  responseBody = JSON.stringify(entry.body);
-                } else if (entry.contentType.includes('text') || entry.contentType.includes('javascript')) {
-                  responseBody = entry.body;
-                } else {
-                  const binaryStr = atob(entry.body);
-                  const len = binaryStr.length;
-                  const bytes = new Uint8Array(len);
-                  for (let i = 0; i < len; i++) {
-                    bytes[i] = binaryStr.charCodeAt(i);
-                  }
-                  responseBody = bytes.buffer;
+            for (const entry of data.caches[cacheName]) {
+              let responseBody;
+              if (entry.contentType.includes('application/json')) {
+                responseBody = JSON.stringify(entry.body);
+              } else if (entry.contentType.includes('text') || entry.contentType.includes('javascript')) {
+                responseBody = entry.body;
+              } else {
+                const binaryStr = atob(entry.body);
+                const len = binaryStr.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                  bytes[i] = binaryStr.charCodeAt(i);
                 }
-                const headers = new Headers({ 'content-type': entry.contentType });
-                const response = new Response(responseBody, { headers });
-                await cache.put(entry.url, response);
+                responseBody = bytes.buffer;
               }
+              const headers = new Headers({ 'content-type': entry.contentType });
+              const response = new Response(responseBody, { headers });
+              await cache.put(entry.url, response);
             }
           }
+        }
         alert("Data loaded");
     };
     alert("This might take a while, dont touch anything other than this OK button");
